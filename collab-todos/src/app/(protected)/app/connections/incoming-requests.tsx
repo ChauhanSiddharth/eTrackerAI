@@ -12,19 +12,23 @@ type Request = {
 };
 
 export function IncomingRequests({ requests }: { requests: Request[] }) {
-  const supabase = createClient();
   const router = useRouter();
   const [acting, setActing] = useState<string | null>(null);
 
   async function respond(id: string, status: "accepted" | "rejected") {
     setActing(id);
+    const supabase = createClient();
     await supabase.from("connections").update({ status }).eq("id", id);
     router.refresh();
     setActing(null);
   }
 
   if (requests.length === 0) {
-    return <p className="text-gray-400">No pending requests.</p>;
+    return (
+      <div className="p-6 bg-surface rounded-xl border border-border text-center">
+        <p className="text-sm text-text-muted">No pending requests</p>
+      </div>
+    );
   }
 
   return (
@@ -32,25 +36,30 @@ export function IncomingRequests({ requests }: { requests: Request[] }) {
       {requests.map((req) => (
         <li
           key={req.id}
-          className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
+          className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border"
         >
-          <span className="font-medium">
-            {req.profiles?.username ?? "Unknown"}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-8 rounded-full bg-coral/15 text-coral flex items-center justify-center text-xs font-semibold">
+              {(req.profiles?.username ?? "U").charAt(0).toUpperCase()}
+            </span>
+            <span className="font-medium text-sm text-text-primary">
+              {req.profiles?.username ?? "Unknown"}
+            </span>
+          </div>
           <div className="flex gap-2">
             <button
               onClick={() => respond(req.id, "accepted")}
               disabled={acting === req.id}
-              className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              className="px-4 py-1.5 text-xs font-medium bg-teal text-white rounded-lg hover:bg-teal/90 disabled:opacity-40 transition-all"
             >
               Accept
             </button>
             <button
               onClick={() => respond(req.id, "rejected")}
               disabled={acting === req.id}
-              className="px-3 py-1 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50"
+              className="px-4 py-1.5 text-xs font-medium border border-border text-text-secondary rounded-lg hover:border-coral hover:text-coral disabled:opacity-40 transition-all"
             >
-              Reject
+              Decline
             </button>
           </div>
         </li>

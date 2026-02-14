@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CollabTodos",
-  description: "Collaborative todo lists with real-time updates",
+  title: "TrackerApp",
+  description: "Collaborative task tracking with real-time updates",
 };
 
 export default function RootLayout({

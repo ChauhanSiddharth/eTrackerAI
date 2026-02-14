@@ -7,7 +7,7 @@ import Link from "next/link";
 type MemberRow = {
   user_id: string;
   role: string;
-  profiles: { username: string } | null;
+  username: string;
 };
 
 type TodoRow = {
@@ -49,9 +49,7 @@ export default async function ListDetailPage({
     .order("created_at", { ascending: true });
 
   const { data: membersRaw } = await supabase
-    .from("list_members")
-    .select("user_id, role, profiles(username)")
-    .eq("list_id", id);
+    .rpc("get_list_members", { p_list_id: id });
 
   const todos = (todosRaw ?? []) as unknown as TodoRow[];
   const members = (membersRaw ?? []) as unknown as MemberRow[];
@@ -59,16 +57,24 @@ export default async function ListDetailPage({
 
   return (
     <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/app" className="text-gray-400 hover:text-gray-600">
-          &larr; Back
+        <Link
+          href="/app"
+          className="w-8 h-8 rounded-lg border border-border bg-surface flex items-center justify-center text-text-muted hover:text-teal hover:border-teal/30 transition-all"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
         </Link>
-        <h1 className="text-2xl font-bold">{list.title}</h1>
-        {isOwner && (
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-            Owner
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-text-primary">{list.title}</h1>
+          {isOwner && (
+            <span className="text-xs font-medium bg-teal/10 text-teal px-2.5 py-1 rounded-full">
+              Owner
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Members */}
@@ -76,14 +82,18 @@ export default async function ListDetailPage({
         {members.map((m) => (
           <span
             key={m.user_id}
-            className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full"
+            className="inline-flex items-center gap-1.5 text-xs bg-surface border border-border text-text-secondary px-2.5 py-1.5 rounded-full"
           >
-            {m.profiles?.username ?? "Unknown"} ({m.role})
+            <span className="w-5 h-5 rounded-full bg-steel/15 text-steel flex items-center justify-center text-[10px] font-semibold">
+              {(m.username ?? "U").charAt(0).toUpperCase()}
+            </span>
+            {m.username ?? "Unknown"}
+            <span className="text-text-muted">({m.role})</span>
           </span>
         ))}
       </div>
 
-      {/* Share section – only visible to owner */}
+      {/* Share section */}
       {isOwner && <ShareSection listId={id} currentMembers={members} />}
 
       {/* Todos */}

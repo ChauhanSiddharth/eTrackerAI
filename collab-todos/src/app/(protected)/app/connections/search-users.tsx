@@ -11,7 +11,6 @@ export function SearchUsers({ userId }: { userId: string }) {
   const [results, setResults] = useState<Profile[]>([]);
   const [searching, setSearching] = useState(false);
   const [sending, setSending] = useState<string | null>(null);
-  const supabase = createClient();
   const router = useRouter();
 
   async function handleSearch(e: React.FormEvent) {
@@ -19,6 +18,7 @@ export function SearchUsers({ userId }: { userId: string }) {
     if (!query.trim()) return;
     setSearching(true);
 
+    const supabase = createClient();
     const { data } = await supabase
       .from("profiles")
       .select("id, username")
@@ -32,6 +32,7 @@ export function SearchUsers({ userId }: { userId: string }) {
 
   async function sendInvite(addresseeId: string) {
     setSending(addresseeId);
+    const supabase = createClient();
     const { error } = await supabase
       .from("connections")
       .insert({ requester: userId, addressee: addresseeId });
@@ -52,12 +53,12 @@ export function SearchUsers({ userId }: { userId: string }) {
           placeholder="Search by username..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-3.5 py-2.5 border border-border rounded-xl bg-surface text-sm placeholder:text-text-muted"
         />
         <button
           type="submit"
           disabled={searching}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="px-5 py-2.5 bg-steel text-white text-sm font-medium rounded-xl hover:bg-steel/90 disabled:opacity-40 transition-all"
         >
           Search
         </button>
@@ -68,13 +69,18 @@ export function SearchUsers({ userId }: { userId: string }) {
           {results.map((profile) => (
             <li
               key={profile.id}
-              className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
+              className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border"
             >
-              <span className="font-medium">{profile.username}</span>
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-full bg-steel/15 text-steel flex items-center justify-center text-xs font-semibold">
+                  {profile.username.charAt(0).toUpperCase()}
+                </span>
+                <span className="font-medium text-sm text-text-primary">{profile.username}</span>
+              </div>
               <button
                 onClick={() => sendInvite(profile.id)}
                 disabled={sending === profile.id}
-                className="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                className="px-4 py-1.5 text-xs font-medium bg-teal text-white rounded-lg hover:bg-teal/90 disabled:opacity-40 transition-all"
               >
                 {sending === profile.id ? "Sending..." : "Send Invite"}
               </button>

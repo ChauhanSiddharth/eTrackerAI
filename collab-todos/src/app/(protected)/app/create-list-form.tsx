@@ -8,13 +8,13 @@ export function CreateListForm() {
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
     setLoading(true);
 
+    const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -39,12 +39,12 @@ export function CreateListForm() {
         placeholder="New list name..."
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex-1 px-3.5 py-2.5 border border-border rounded-xl bg-surface text-sm placeholder:text-text-muted"
       />
       <button
         type="submit"
         disabled={loading || !title.trim()}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        className="px-5 py-2.5 bg-teal text-white text-sm font-medium rounded-xl hover:bg-teal/90 disabled:opacity-40 transition-all"
       >
         {loading ? "Creating..." : "Create List"}
       </button>

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 type Member = {
   user_id: string;
   role: string;
-  profiles: unknown;
+  username: string;
 };
 
 type Connection = {
@@ -60,7 +60,7 @@ export function ShareSection({
             username: other?.username ?? "Unknown",
           };
         })
-        .filter((c) => !memberIds.has(c.userId)); // exclude existing members
+        .filter((c) => !memberIds.has(c.userId));
 
       setConnections(mapped);
     }
@@ -88,22 +88,22 @@ export function ShareSection({
 
   if (connections.length === 0) {
     return (
-      <div className="p-4 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-500">
-          No connections available to share with. Add connections first!
+      <div className="p-4 bg-surface rounded-xl border border-border">
+        <p className="text-sm text-text-muted">
+          No connections available to share with. Add connections first.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 bg-gray-50 rounded-lg space-y-3">
-      <h3 className="font-semibold text-sm">Share with a connection</h3>
+    <div className="p-5 bg-surface rounded-xl border border-border space-y-3">
+      <h3 className="text-sm font-semibold text-text-primary">Share with a connection</h3>
       <div className="flex gap-2">
         <select
           value={selectedUser}
           onChange={(e) => setSelectedUser(e.target.value)}
-          className="flex-1 px-3 py-2 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-3.5 py-2.5 border border-border rounded-xl bg-cream/30 text-sm text-text-primary"
         >
           <option value="">Select a connection...</option>
           {connections.map((c) => (
@@ -115,7 +115,7 @@ export function ShareSection({
         <button
           onClick={handleShare}
           disabled={!selectedUser || sharing}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="px-5 py-2.5 bg-steel text-white text-sm font-medium rounded-xl hover:bg-steel/90 disabled:opacity-40 transition-all"
         >
           {sharing ? "Sharing..." : "Share"}
         </button>

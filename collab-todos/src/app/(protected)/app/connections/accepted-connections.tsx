@@ -16,13 +16,16 @@ export function AcceptedConnections({
   userId: string;
 }) {
   if (connections.length === 0) {
-    return <p className="text-gray-400">No connections yet.</p>;
+    return (
+      <div className="p-6 bg-surface rounded-xl border border-border text-center">
+        <p className="text-sm text-text-muted">No connections yet</p>
+      </div>
+    );
   }
 
   return (
     <ul className="space-y-2">
       {connections.map((conn) => {
-        // Show the other person's username
         const otherProfile =
           conn.requester === userId
             ? conn.addressee_profile
@@ -31,12 +34,17 @@ export function AcceptedConnections({
         return (
           <li
             key={conn.id}
-            className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm"
+            className="flex items-center justify-between p-4 bg-surface rounded-xl border border-border"
           >
-            <span className="font-medium">
-              {otherProfile?.username ?? "Unknown"}
-            </span>
-            <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-teal/15 text-teal flex items-center justify-center text-xs font-semibold">
+                {(otherProfile?.username ?? "U").charAt(0).toUpperCase()}
+              </span>
+              <span className="font-medium text-sm text-text-primary">
+                {otherProfile?.username ?? "Unknown"}
+              </span>
+            </div>
+            <span className="text-xs font-medium text-teal bg-teal/10 px-2.5 py-1 rounded-full">
               Connected
             </span>
           </li>

@@ -2,32 +2,18 @@
 -- Collaborative Todos – full schema + RLS
 -- ============================================================
 
--- ---------- enums ----------
+-- ==================== ENUMS ====================
 create type connection_status as enum ('pending', 'accepted', 'rejected');
 create type member_role       as enum ('owner', 'editor');
 
--- ---------- profiles ----------
+-- ==================== TABLES ====================
+
 create table profiles (
   id         uuid primary key references auth.users on delete cascade,
   username   text unique not null,
   created_at timestamptz default now()
 );
 
-alter table profiles enable row level security;
-
--- Anyone authenticated can read profiles (needed for user search)
-create policy "profiles_select" on profiles
-  for select to authenticated using (true);
-
--- Users can update only their own profile
-create policy "profiles_update" on profiles
-  for update to authenticated using (id = auth.uid());
-
--- Users can insert their own profile row (signup flow)
-create policy "profiles_insert" on profiles
-  for insert to authenticated with check (id = auth.uid());
-
--- ---------- connections ----------
 create table connections (
   id         uuid primary key default gen_random_uuid(),
   requester  uuid not null references profiles(id) on delete cascade,
@@ -37,29 +23,6 @@ create table connections (
   unique (requester, addressee)
 );
 
-alter table connections enable row level security;
-
--- Users see rows they are part of
-create policy "connections_select" on connections
-  for select to authenticated
-  using (requester = auth.uid() or addressee = auth.uid());
-
--- A user can create a request where they are the requester
-create policy "connections_insert" on connections
-  for insert to authenticated
-  with check (requester = auth.uid() and status = 'pending');
-
--- The addressee can accept/reject
-create policy "connections_update" on connections
-  for update to authenticated
-  using (addressee = auth.uid() and status = 'pending');
-
--- Either party can delete (unfriend)
-create policy "connections_delete" on connections
-  for delete to authenticated
-  using (requester = auth.uid() or addressee = auth.uid());
-
--- ---------- todo_lists ----------
 create table todo_lists (
   id         uuid primary key default gen_random_uuid(),
   title      text not null,
@@ -67,40 +30,6 @@ create table todo_lists (
   created_at timestamptz default now()
 );
 
-alter table todo_lists enable row level security;
-
--- Select: user must be a member
-create policy "todo_lists_select" on todo_lists
-  for select to authenticated
-  using (
-    exists (
-      select 1 from list_members
-      where list_members.list_id = id
-        and list_members.user_id = auth.uid()
-    )
-  );
-
--- Insert: owner must be the current user
-create policy "todo_lists_insert" on todo_lists
-  for insert to authenticated
-  with check (owner = auth.uid());
-
--- Update/Delete: must be a member (owner or editor)
-create policy "todo_lists_update" on todo_lists
-  for update to authenticated
-  using (
-    exists (
-      select 1 from list_members
-      where list_members.list_id = id
-        and list_members.user_id = auth.uid()
-    )
-  );
-
-create policy "todo_lists_delete" on todo_lists
-  for delete to authenticated
-  using (owner = auth.uid());
-
--- ---------- list_members ----------
 create table list_members (
   list_id    uuid not null references todo_lists(id) on delete cascade,
   user_id    uuid not null references profiles(id) on delete cascade,
@@ -109,42 +38,6 @@ create table list_members (
   primary key (list_id, user_id)
 );
 
-alter table list_members enable row level security;
-
--- Select: user is a member of that list
-create policy "list_members_select" on list_members
-  for select to authenticated
-  using (
-    exists (
-      select 1 from list_members lm
-      where lm.list_id = list_members.list_id
-        and lm.user_id = auth.uid()
-    )
-  );
-
--- Insert: only the list owner can add members
-create policy "list_members_insert" on list_members
-  for insert to authenticated
-  with check (
-    exists (
-      select 1 from todo_lists
-      where todo_lists.id = list_id
-        and todo_lists.owner = auth.uid()
-    )
-  );
-
--- Delete: only the list owner can remove members (but not themselves)
-create policy "list_members_delete" on list_members
-  for delete to authenticated
-  using (
-    exists (
-      select 1 from todo_lists
-      where todo_lists.id = list_id
-        and todo_lists.owner = auth.uid()
-    )
-  );
-
--- ---------- todos ----------
 create table todos (
   id         uuid primary key default gen_random_uuid(),
   list_id    uuid not null references todo_lists(id) on delete cascade,
@@ -155,9 +48,86 @@ create table todos (
   updated_at timestamptz default now()
 );
 
+-- ==================== ENABLE RLS ====================
+
+alter table profiles enable row level security;
+alter table connections enable row level security;
+alter table todo_lists enable row level security;
+alter table list_members enable row level security;
 alter table todos enable row level security;
 
--- All CRUD: user must be a list member
+-- ==================== RLS POLICIES ====================
+
+-- profiles
+create policy "profiles_select" on profiles
+  for select to authenticated using (true);
+create policy "profiles_update" on profiles
+  for update to authenticated using (id = auth.uid());
+create policy "profiles_insert" on profiles
+  for insert to authenticated with check (id = auth.uid());
+
+-- connections
+create policy "connections_select" on connections
+  for select to authenticated
+  using (requester = auth.uid() or addressee = auth.uid());
+create policy "connections_insert" on connections
+  for insert to authenticated
+  with check (requester = auth.uid() and status = 'pending');
+create policy "connections_update" on connections
+  for update to authenticated
+  using (addressee = auth.uid() and status = 'pending');
+create policy "connections_delete" on connections
+  for delete to authenticated
+  using (requester = auth.uid() or addressee = auth.uid());
+
+-- todo_lists: check ownership or direct membership (no recursion)
+create policy "todo_lists_select" on todo_lists
+  for select to authenticated
+  using (
+    owner = auth.uid()
+    or id in (select list_id from list_members where user_id = auth.uid())
+  );
+create policy "todo_lists_insert" on todo_lists
+  for insert to authenticated
+  with check (owner = auth.uid());
+create policy "todo_lists_update" on todo_lists
+  for update to authenticated
+  using (
+    exists (
+      select 1 from list_members
+      where list_members.list_id = id
+        and list_members.user_id = auth.uid()
+    )
+  );
+create policy "todo_lists_delete" on todo_lists
+  for delete to authenticated
+  using (owner = auth.uid());
+
+-- list_members
+-- list_members: user can see their own membership (breaks recursion cycle)
+create policy "list_members_select" on list_members
+  for select to authenticated
+  using (user_id = auth.uid());
+create policy "list_members_insert" on list_members
+  for insert to authenticated
+  with check (
+    exists (
+      select 1 from todo_lists
+      where todo_lists.id = list_id
+        and todo_lists.owner = auth.uid()
+    )
+  );
+create policy "list_members_delete" on list_members
+  for delete to authenticated
+  using (
+    exists (
+      select 1 from todo_lists
+      where todo_lists.id = list_id
+        and todo_lists.owner = auth.uid()
+    )
+  );
+
+-- todos
 create policy "todos_select" on todos
   for select to authenticated
   using (
@@ -167,7 +137,6 @@ create policy "todos_select" on todos
         and list_members.user_id = auth.uid()
     )
   );
-
 create policy "todos_insert" on todos
   for insert to authenticated
   with check (
@@ -177,7 +146,6 @@ create policy "todos_insert" on todos
         and list_members.user_id = auth.uid()
     )
   );
-
 create policy "todos_update" on todos
   for update to authenticated
   using (
@@ -187,7 +155,6 @@ create policy "todos_update" on todos
         and list_members.user_id = auth.uid()
     )
   );
-
 create policy "todos_delete" on todos
   for delete to authenticated
   using (
@@ -198,7 +165,31 @@ create policy "todos_delete" on todos
     )
   );
 
--- ---------- triggers ----------
+-- ==================== FUNCTIONS ====================
+
+-- Get all members of a list (bypasses RLS so co-members can see each other)
+create or replace function get_list_members(p_list_id uuid)
+returns table (user_id uuid, role member_role, username text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (
+    select 1 from list_members where list_id = p_list_id and list_members.user_id = auth.uid()
+  ) then
+    return;
+  end if;
+
+  return query
+    select lm.user_id, lm.role, p.username
+    from list_members lm
+    join profiles p on p.id = lm.user_id
+    where lm.list_id = p_list_id;
+end;
+$$;
+
+-- ==================== TRIGGERS ====================
 
 -- Auto-create profile on signup
 create or replace function handle_new_user()
