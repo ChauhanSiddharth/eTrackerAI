@@ -115,7 +115,7 @@ export function ShareSection({
         <button
           onClick={handleShare}
           disabled={!selectedUser || sharing}
-          className="px-5 py-2.5 bg-steel text-white text-sm font-medium rounded-xl hover:bg-steel/90 disabled:opacity-40 transition-all"
+          className="btn-secondary"
         >
           {sharing ? "Sharing..." : "Share"}
         </button>

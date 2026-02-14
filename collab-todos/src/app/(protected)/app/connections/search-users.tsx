@@ -58,7 +58,7 @@ export function SearchUsers({ userId }: { userId: string }) {
         <button
           type="submit"
           disabled={searching}
-          className="px-5 py-2.5 bg-steel text-white text-sm font-medium rounded-xl hover:bg-steel/90 disabled:opacity-40 transition-all"
+          className="btn-secondary"
         >
           Search
         </button>
@@ -80,7 +80,7 @@ export function SearchUsers({ userId }: { userId: string }) {
               <button
                 onClick={() => sendInvite(profile.id)}
                 disabled={sending === profile.id}
-                className="px-4 py-1.5 text-xs font-medium bg-teal text-white rounded-lg hover:bg-teal/90 disabled:opacity-40 transition-all"
+                className="btn-primary btn-sm"
               >
                 {sending === profile.id ? "Sending..." : "Send Invite"}
               </button>

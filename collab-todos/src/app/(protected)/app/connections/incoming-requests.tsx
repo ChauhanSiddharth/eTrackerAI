@@ -50,14 +50,14 @@ export function IncomingRequests({ requests }: { requests: Request[] }) {
             <button
               onClick={() => respond(req.id, "accepted")}
               disabled={acting === req.id}
-              className="px-4 py-1.5 text-xs font-medium bg-teal text-white rounded-lg hover:bg-teal/90 disabled:opacity-40 transition-all"
+              className="btn-primary btn-sm"
             >
               Accept
             </button>
             <button
               onClick={() => respond(req.id, "rejected")}
               disabled={acting === req.id}
-              className="px-4 py-1.5 text-xs font-medium border border-border text-text-secondary rounded-lg hover:border-coral hover:text-coral disabled:opacity-40 transition-all"
+              className="btn-outline btn-sm"
             >
               Decline
             </button>

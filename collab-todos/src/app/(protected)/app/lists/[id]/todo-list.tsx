@@ -128,7 +128,7 @@ export function TodoList({
         <button
           type="submit"
           disabled={loading || !newTitle.trim()}
-          className="px-5 py-2.5 bg-teal text-white text-sm font-medium rounded-xl hover:bg-teal/90 disabled:opacity-40 transition-all"
+          className="btn-primary"
         >
           Add
         </button>
