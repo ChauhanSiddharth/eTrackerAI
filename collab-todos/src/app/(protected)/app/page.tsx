@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { CreateListForm } from "./create-list-form";
+import { DeleteListButton } from "./delete-list-button";
 
 type ListRow = {
   id: string;
@@ -64,6 +65,9 @@ export default async function AppPage() {
                     <span className="text-xs text-text-muted">
                       {new Date(list.created_at).toLocaleDateString()}
                     </span>
+                    {isOwner && (
+                      <DeleteListButton listId={list.id} listTitle={list.title} />
+                    )}
                     <svg className="w-4 h-4 text-text-muted group-hover:text-teal transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>

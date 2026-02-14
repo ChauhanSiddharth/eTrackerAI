@@ -75,7 +75,8 @@ create policy "connections_insert" on connections
   with check (requester = auth.uid() and status = 'pending');
 create policy "connections_update" on connections
   for update to authenticated
-  using (addressee = auth.uid() and status = 'pending');
+  using (addressee = auth.uid() and status = 'pending')
+  with check (addressee = auth.uid() and status in ('accepted', 'rejected'));
 create policy "connections_delete" on connections
   for delete to authenticated
   using (requester = auth.uid() or addressee = auth.uid());

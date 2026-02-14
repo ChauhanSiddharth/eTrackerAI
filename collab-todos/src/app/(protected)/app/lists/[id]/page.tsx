@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import { TodoList } from "./todo-list";
 import { ShareSection } from "./share-section";
+import { DeleteListButton } from "../../delete-list-button";
 import Link from "next/link";
 
 type MemberRow = {
@@ -58,23 +59,28 @@ export default async function ListDetailPage({
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/app"
-          className="w-8 h-8 rounded-lg border border-border bg-surface flex items-center justify-center text-text-muted hover:text-teal hover:border-teal/30 transition-all"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </Link>
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-text-primary">{list.title}</h1>
-          {isOwner && (
-            <span className="text-xs font-medium bg-teal/10 text-teal px-2.5 py-1 rounded-full">
-              Owner
-            </span>
-          )}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/app"
+            className="w-8 h-8 rounded-lg border border-border bg-surface flex items-center justify-center text-text-muted hover:text-teal hover:border-teal/30 transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-text-primary">{list.title}</h1>
+            {isOwner && (
+              <span className="text-xs font-medium bg-teal/10 text-teal px-2.5 py-1 rounded-full">
+                Owner
+              </span>
+            )}
+          </div>
         </div>
+        {isOwner && (
+          <DeleteListButton listId={id} listTitle={list.title} />
+        )}
       </div>
 
       {/* Members */}
